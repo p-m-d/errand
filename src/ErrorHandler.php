@@ -116,12 +116,16 @@ class ErrorHandler {
 		}
 		$error = compact('code', 'description', 'file', 'line', 'context');
 		$previous = $this->previousErrorHandler;
-		$params = compact('error', 'previous');
-		$this->filterMethod(__FUNCTION__, $params, function($self, $params){
+		$default = true;
+		$params = compact('error', 'previous', 'default');
+		return $this->filterMethod(__FUNCTION__, $params, function($self, $params){
 			extract($params);
 			if ($previous) {
 				extract($error);
 				return call_user_func($previous, $code, $message, $file, $line, $context);
+			}
+			if ($default) {
+				return false;
 			}
 		});
 	}
@@ -130,28 +134,27 @@ class ErrorHandler {
 		if (empty($this->handleFatals)) {
 			return;
 		}
-		$fatals = $this->handleFatals;
 		$error = error_get_last();
 		if (php_sapi_name() === 'cli' || !is_array($error)) {
 			return;
 		}
-		if (!in_array($error['type'], $fatals, true)) {
+		if (!in_array($error['type'], $this->handleFatals, true)) {
 			return;
 		}
-		$params = compact('error', 'fatals');
+		$params = compact('error');
 		$this->filterMethod(__FUNCTION__, $params, function($self, $params){
 			extract($params);
-			if (!isset($error['code'])) {
-				$error['code'] = 0;
+			if (!isset($exception)) {
+				if (!isset($error['code'])) {
+					$error['code'] = 0;
+				}
+				$exception = new \ErrorException($error['message'], $error['code'], $error['type'], $error['file'], $error['line']);
 			}
-			if (!isset($errorException)) {
-				$errorException = new \ErrorException($error['message'], $error['code'], $error['type'], $error['file'], $error['line']);
-			}
-			$self->handleException($errorException);
+			$self->handleException($exception);
 		});
 	}
 
-	public function handleException(\Exception $exception) {
+	public function handleException($exception) {
 		if (ob_get_length()) {
 			ob_end_clean();
 		}
@@ -163,15 +166,18 @@ class ErrorHandler {
 		$previous = $this->previousExceptionHandler;
 		$params = compact('exit', 'exception', 'previous');
 		$this->handlingException = true;
-		$this->filterMethod(__FUNCTION__, $params, function($self, $params){
-			$self->handlingException = false;
+		return $this->filterMethod(__FUNCTION__, $params, function($self, $params){
 			extract($params);
 			if ($previous) {
 				call_user_func($previous, $exception);
 			}
-			if ($exit !== false) {
-				exit($exit ?: 1);
+			if ($exit) {
+				exit($exit);
 			}
+			if ($exception) {
+				throw $exception;
+			}
+			$self->handlingException = false;
 		});
 	}
 }
