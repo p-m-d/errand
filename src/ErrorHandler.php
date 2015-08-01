@@ -88,6 +88,30 @@ class ErrorHandler {
 		}
 	}
 
+	public function addErrorHandler($callable) {
+		$this->addMethodFilter('handleError', $callable);
+	}
+
+	public function addFatalHandler($callable) {
+		$this->addMethodFilter('handleFatalError', $callable);
+	}
+
+	public function addExceptionHandler($callable) {
+		$this->addMethodFilter('handleException', $callable);
+	}
+
+	public function removeErrorHandler($callable) {
+		$this->removeMethodFilter('handleError', $callable);
+	}
+
+	public function removeFatalHandler($callable) {
+		$this->removeMethodFilter('handleFatalError', $callable);
+	}
+
+	public function removeExceptionHandler($callable) {
+		$this->removeMethodFilter('handleException', $callable);
+	}
+
 	public function restoreErrorHandler() {
 		if ($this->handleErrors) {
 			restore_error_handler();
@@ -104,14 +128,15 @@ class ErrorHandler {
 
 	public function restoreExceptionHandler() {
 		if ($this->handleExceptions) {
-			unset($this->previousExceptionHandler);
 			restore_exception_handler();
+			unset($this->previousExceptionHandler);
 			$this->handleExceptions = false;
 		}
 	}
 
 	public function handleError($code, $description, $file = null, $line = null, $context = null) {
 		if (error_reporting() === 0) {
+			//errors suppressed
 			return false;
 		}
 		$error = compact('code', 'description', 'file', 'line', 'context');
@@ -125,6 +150,7 @@ class ErrorHandler {
 				return call_user_func($previous, $code, $message, $file, $line, $context);
 			}
 			if ($default) {
+				//bool:false = let the default error handler receive it
 				return false;
 			}
 		});
@@ -136,6 +162,7 @@ class ErrorHandler {
 		}
 		$error = error_get_last();
 		if (php_sapi_name() === 'cli' || !is_array($error)) {
+			//@todo - why are we not dealing with this in cli?
 			return;
 		}
 		if (!in_array($error['type'], $this->handleFatals, true)) {
