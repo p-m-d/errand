@@ -134,12 +134,12 @@ class ErrorHandler {
 		}
 	}
 
-	public function handleError($code, $description, $file = null, $line = null, $context = null) {
+	public function handleError($code, $message, $file = null, $line = null, $context = null) {
 		if (error_reporting() === 0) {
 			//errors suppressed
 			return false;
 		}
-		$error = compact('code', 'description', 'file', 'line', 'context');
+		$error = compact('code', 'message', 'file', 'line', 'context');
 		$previous = $this->previousErrorHandler;
 		$default = true;
 		$params = compact('error', 'previous', 'default');
@@ -161,8 +161,7 @@ class ErrorHandler {
 			return;
 		}
 		$error = error_get_last();
-		if (php_sapi_name() === 'cli' || !is_array($error)) {
-			//@todo - why are we not dealing with this in cli?
+		if (!is_array($error)) {
 			return;
 		}
 		if (!in_array($error['type'], $this->handleFatals, true)) {
@@ -177,7 +176,9 @@ class ErrorHandler {
 				}
 				$exception = new \ErrorException($error['message'], $error['code'], $error['type'], $error['file'], $error['line']);
 			}
-			$self->handleException($exception);
+			if ($exception) {
+				$self->handleException($exception);
+			}
 		});
 	}
 
