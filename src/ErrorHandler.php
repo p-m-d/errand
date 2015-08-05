@@ -190,9 +190,9 @@ class ErrorHandler {
 			//encountered an exception, while handling an expception, BAIL OUT!
 			throw $exception;
 		}
-		$exit = $exception->getCode();
+		$exit = $throw = false;
 		$previous = $this->previousExceptionHandler;
-		$params = compact('exit', 'exception', 'previous');
+		$params = compact('exit', 'throw', 'exception', 'previous');
 		$this->handlingException = true;
 		return $this->filterMethod(__FUNCTION__, $params, function($self, $params){
 			extract($params);
@@ -202,7 +202,7 @@ class ErrorHandler {
 			if ($exit) {
 				exit($exit);
 			}
-			if ($exception) {
+			if ($exception && $throw) {
 				throw $exception;
 			}
 			$self->handlingException = false;
