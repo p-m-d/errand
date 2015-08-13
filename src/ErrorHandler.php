@@ -144,7 +144,7 @@ class ErrorHandler {
 		}
 		$error = compact('code', 'message', 'file', 'line', 'context');
 		$previous = $this->previousErrorHandler;
-		$default = true;
+		$default = false;
 		$params = compact('error', 'previous', 'default');
 		return $this->filterMethod(__FUNCTION__, $params, function($self, $params){
 			extract($params);
