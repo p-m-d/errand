@@ -186,9 +186,6 @@ class ErrorHandler {
 	}
 
 	public function handleException($exception) {
-		if (ob_get_length()) {
-			ob_end_clean();
-		}
 		if ($this->handlingException) {
 			//encountered an exception, while handling an expception, BAIL OUT!
 			throw $exception;
