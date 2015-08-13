@@ -14,6 +14,8 @@ class ErrorHandler {
 
 	protected $handleErrors = false;
 
+	protected $handleErrorLevel;
+
 	protected $handleFatals = [];
 
 	protected $reservedFatalMemory = '';
@@ -60,8 +62,9 @@ class ErrorHandler {
 		return $instance;
 	}
 
-	public function registerErrorHandler($level = -1, $callPrevious = false) {
+	public function registerErrorHandler($level = E_ALL, $callPrevious = false) {
 		$this->restoreErrorHandler();
+		$this->handleErrorLevel = $level;
 		$this->previousErrorLevel = error_reporting($level);
 		$previousErrorHandler = set_error_handler([$this, 'handleError'], $level);
 		$this->handleErrors = true;
@@ -116,7 +119,7 @@ class ErrorHandler {
 		if ($this->handleErrors) {
 			restore_error_handler();
 			error_reporting($this->previousErrorLevel);
-			unset($this->previousErrorHandler, $this->previousErrorLevel);
+			unset($this->handleErrorLevel, $this->previousErrorHandler, $this->previousErrorLevel);
 			$this->handleErrors = false;
 		}
 	}
@@ -135,8 +138,8 @@ class ErrorHandler {
 	}
 
 	public function handleError($code, $message, $file = null, $line = null, $context = null) {
-		if (error_reporting() === 0) {
-			//errors suppressed
+		if (error_reporting() === 0 || !($this->handleErrorLevel & $code)) {
+			//errors suppressed or not hanlded
 			return false;
 		}
 		$error = compact('code', 'message', 'file', 'line', 'context');
@@ -145,9 +148,9 @@ class ErrorHandler {
 		$params = compact('error', 'previous', 'default');
 		return $this->filterMethod(__FUNCTION__, $params, function($self, $params){
 			extract($params);
-			if ($previous) {
+			if ($previous && ($self->previousErrorLevel & $error['code'])) {
 				extract($error);
-				return call_user_func($previous, $code, $message, $file, $line, $context);
+				call_user_func($previous, $code, $message, $file, $line, $context);
 			}
 			if ($default) {
 				//bool:false = let the default error handler receive it
