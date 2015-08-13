@@ -5,11 +5,11 @@
 	"type": "library",
 	"license": "None",
 	"require": {
-		"php": ">=5.4.0"
+		"php": ">=5.4.0",
+		"p-m-d/infiltrate": "^0.1"
 	},
 	"require-dev": {
-		"phpunit/phpunit": "^4.6",
-		"p-m-d/infiltrate": "dev-master"
+		"phpunit/phpunit": "^4.6"
 	},
 	"autoload": {
 		"psr-4": {
