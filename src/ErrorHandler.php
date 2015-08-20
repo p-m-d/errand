@@ -65,10 +65,10 @@ class ErrorHandler {
 	public function registerErrorHandler($level = E_ALL, $callPrevious = false) {
 		$this->restoreErrorHandler();
 		$this->handleErrorLevel = $level;
-		$this->previousErrorLevel = error_reporting($level);
 		$previousErrorHandler = set_error_handler([$this, 'handleError'], $level);
 		$this->handleErrors = true;
 		if ($callPrevious) {
+			$this->previousErrorLevel = is_int($callPrevious) ? $callPrevious : E_ALL;
 			$this->previousErrorHandler = $previousErrorHandler;
 		}
 	}
@@ -118,7 +118,6 @@ class ErrorHandler {
 	public function restoreErrorHandler() {
 		if ($this->handleErrors) {
 			restore_error_handler();
-			error_reporting($this->previousErrorLevel);
 			unset($this->handleErrorLevel, $this->previousErrorHandler, $this->previousErrorLevel);
 			$this->handleErrors = false;
 		}
