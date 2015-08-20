@@ -42,7 +42,7 @@ class ErrorHandler {
 	public static function register($options = [], ErrorHandler $instance = null) {
 		$instance = $instance ?: static::getInstance();
 		$options += [
-			'level' => -1,
+			'level' => E_ALL,
 			'fatals' => [],
 			'reserveFatalMemorySize' => 0,
 			'callPreviousErrorHandler' => false,
