@@ -137,7 +137,11 @@ class ErrorHandler {
 	}
 
 	public function handleError($code, $message, $file = null, $line = null, $context = null) {
+		$previous = $this->previousErrorHandler;
 		if (error_reporting() === 0 || !($this->handleErrorLevel & $code)) {
+			if ($previous && ($this->previousErrorLevel & $error['code'])) {
+				return call_user_func($previous, $code, $message, $file, $line, $context);
+			}
 			//errors suppressed or not hanlded
 			return false;
 		}
