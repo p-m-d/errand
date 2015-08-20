@@ -170,13 +170,11 @@ class ErrorHandler {
 		if (!in_array($error['type'], $this->handleFatals, true)) {
 			return;
 		}
+		$error['code'] = 0;
 		$params = compact('error');
 		$this->filterMethod(__FUNCTION__, $params, function($self, $params){
 			extract($params);
 			if (!isset($exception)) {
-				if (!isset($error['code'])) {
-					$error['code'] = 0;
-				}
 				$exception = new \ErrorException($error['message'], $error['code'], $error['type'], $error['file'], $error['line']);
 			}
 			if ($exception) {
